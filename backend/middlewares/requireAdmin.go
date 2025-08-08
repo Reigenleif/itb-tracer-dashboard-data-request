@@ -1,16 +1,14 @@
 package middlewares
 
-package middlewares
-
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"log"
-	"strings"
-	"time"
 	"grad_deploy/initializers"
 	"grad_deploy/models"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -20,7 +18,7 @@ import (
 func RequireAdmin(c *gin.Context) {
 	// Get the Authorization header from the request
 	tokenString := c.GetHeader("Authorization")
-	
+
 	// Check if the Authorization header is present
 	if tokenString == "" {
 		c.AbortWithStatus(http.StatusUnauthorized)
@@ -51,7 +49,6 @@ func RequireAdmin(c *gin.Context) {
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		
 
 		// Find the user with token sub
 		var user models.User
@@ -76,6 +73,7 @@ func RequireAdmin(c *gin.Context) {
 			Endpoint:  c.Request.URL.Path,
 			CreatedAt: time.Now(),
 		}
+
 		initializers.DB.Create(&logEntry)
 		// continue
 		c.Next()

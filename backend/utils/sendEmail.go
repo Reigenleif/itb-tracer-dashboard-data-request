@@ -2,12 +2,11 @@ package utils
 
 import (
 	"bytes"
+	"gopkg.in/gomail.v2"
 	"html/template"
 	"log"
 	"os"
 	"strconv"
-
-	"gopkg.in/gomail.v2"
 )
 
 // EmailData holds the data for email template
