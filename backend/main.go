@@ -9,6 +9,7 @@ import (
 
 	"grad_deploy/controllers"
 	"grad_deploy/initializers"
+	"grad_deploy/middlewares"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 	r.Use(cors.New(config))
 
 	r.POST("/login", controllers.Login)
-	r.POST("/sql", controllers.PostSQL)
+	r.POST("/sql", middlewares.RequireAdmin, controllers.PostSQL)
 	r.GET("/sql/:name", controllers.GetSQL)
 	r.POST("/email", controllers.PostEmail)
 	// r.GET("/request-history", controllers.GetRequestHistory)
