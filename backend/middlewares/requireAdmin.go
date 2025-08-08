@@ -68,7 +68,7 @@ func RequireAdmin(c *gin.Context) {
 		// Log the admin action
 		logEntry := models.AdminLog{
 			ID:        uuid.New(),
-			AdminName: user.Name,
+			AdminID:   user.ID,
 			Action:    c.Request.Method,
 			Endpoint:  c.Request.URL.Path,
 			CreatedAt: time.Now(),

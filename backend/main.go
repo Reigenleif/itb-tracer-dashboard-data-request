@@ -32,13 +32,25 @@ func main() {
 	r.GET("/sql/:name", controllers.GetSQL)
 	r.POST("/email", controllers.PostEmail)
 	// r.GET("/request-history", controllers.GetRequestHistory)
-	r.Group("/data-requests").
-		POST("/", controllers.NewDataRequest).
-		GET("/", controllers.GetAllDataRequests).
-		GET("/filter", controllers.GetFilteredDataRequests)
-	r.GET("/data-requests/:id", controllers.GetDataRequestByID)
-	r.PUT("/data-requests/:id", controllers.UpdateDataRequestByID)
-	r.DELETE("/data-requests/:id", controllers.DeleteDataRequestByID)
+
+	dataRequests := r.Group("/data-requests")
+	{
+		dataRequests.POST("/", controllers.NewDataRequest)
+		dataRequests.GET("/", controllers.GetAllDataRequests)
+		dataRequests.GET("/filter", controllers.GetFilteredDataRequests)
+		dataRequests.GET("/:id", controllers.GetDataRequestByID)
+		dataRequests.PUT("/:id", controllers.UpdateDataRequestByID)
+		dataRequests.DELETE("/:id", controllers.DeleteDataRequestByID)
+	}
+
+	adminLogs := r.Group("/admin-logs")
+	{
+		adminLogs.POST("/", controllers.CreateAdminLog)
+		adminLogs.GET("/", controllers.GetAdminLogs)
+		adminLogs.GET("/:id", controllers.GetAdminLogByID)
+		adminLogs.DELETE("/:id", controllers.DeleteAdminLogByID)
+		adminLogs.PUT("/:id", controllers.UpdateAdminLogByID)
+	}
 
 	log.Fatal(r.Run())
 }
