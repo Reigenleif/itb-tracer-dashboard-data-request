@@ -1,61 +1,69 @@
 package controllers
 
 import (
-    "fmt"
-    "log"
-    "net/http"
-    "net/smtp"
-    "os"
+	"fmt"
+	"net/http"
+	"os"
 
-    "github.com/gin-gonic/gin"    
+	"github.com/gin-gonic/gin"
+
+	"grad_deploy/utils"
 )
 
 type requestBody struct {
-    Target string `json:"target" binding:"required,email"`
-    CsvID  string `json:"csv_id" binding:"required"`
+	Target string `json:"target" binding:"required,email"`
+	CsvID  string `json:"csv_id" binding:"required"`
 }
 
+// PostEmail handles the request to send an email with CSV data link
 func PostEmail(c *gin.Context) {
-    var req requestBody
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	var req requestBody
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-    // 2. Build email parameters
-    baseURL := os.Getenv("BASE_URL")
-    if baseURL == "" {
-        log.Println("BASE_URL is not set")
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Server configuration error"})
-        return
-    }
-    subject := "Tracer Study Data Request"
-    body := fmt.Sprintf("Please access the requested data here:\n\n%s/sql/%s", baseURL, req.CsvID)
-    message := []byte(
-        fmt.Sprintf("Subject: %s\r\n\r\n%s\r\n", subject, body),
-    )
+	// Get base URL from environment
+	baseURL := os.Getenv("BASE_URL")
+	if baseURL == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "BASE_URL not configured"})
+		return
+	}
 
-    // 3. SMTP configuration (from env)
-    smtpHost := os.Getenv("SMTP_HOST")   // e.g. "smtp.gmail.com"
-    smtpPort := os.Getenv("SMTP_PORT")   // e.g. "587"
-    smtpUser := os.Getenv("SMTP_EMAIL")  // sender address
-    smtpPass := os.Getenv("SMTP_PASS")   // smtp password or app password
+	// Construct the CSV download link
+	csvLink := baseURL + "/sql/" + req.CsvID
 
-    if smtpHost == "" || smtpPort == "" || smtpUser == "" || smtpPass == "" {
-        log.Println("SMTP configuration incomplete")
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Mail server not configured"})
-        return
-    }
+	// Create email content
+	subject := "Your Requested Data is Ready"
+	body := fmt.Sprintf(`Dear User,
 
-    // 4. Send the email
-    auth := smtp.PlainAuth("", smtpUser, smtpPass, smtpHost)
-    addr := fmt.Sprintf("%s:%s", smtpHost, smtpPort)
-    if err := smtp.SendMail(addr, auth, smtpUser, []string{req.Target}, message); err != nil {
-        log.Printf("Failed to send email: %v\n", err)
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email"})
-        return
-    }
+We are pleased to inform you that your requested data is now available for download.
 
-    // 5. Respond success
-    c.JSON(http.StatusOK, gin.H{"status": "Email sent"})
+You can access your data by visiting the following link:
+%s
+
+This link will provide access to the CSV file you requested.
+
+If you have any questions or need further assistance, please don't hesitate to contact our support team.
+
+Thank you for using our service.
+
+Best regards,
+The Data Request Team
+`, csvLink)
+
+	// Use the sendEmail function from utils package
+
+	emailData := utils.EmailData{
+		To:      req.Target,
+		Subject: subject,
+		Body:    body,
+	}
+
+	if err := utils.SendEmail(emailData); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send email"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Email sent successfully"})
 }

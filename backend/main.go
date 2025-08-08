@@ -31,7 +31,7 @@ func main() {
 	r.POST("/login", controllers.Login)
 	r.POST("/sql", middlewares.RequireAdmin, controllers.PostSQL)
 	r.GET("/sql/:name", controllers.GetSQL)
-	r.POST("/email", controllers.PostEmail)
+	r.POST("/email", middlewares.RequireAdmin, controllers.PostEmail)
 	// r.GET("/request-history", controllers.GetRequestHistory)
 
 	dataRequests := r.Group("/data-requests")

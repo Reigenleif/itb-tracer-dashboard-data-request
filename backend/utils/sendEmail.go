@@ -2,18 +2,19 @@ package utils
 
 import (
 	"bytes"
-	"gopkg.in/gomail.v2"
 	"html/template"
 	"log"
 	"os"
 	"strconv"
+
+	"gopkg.in/gomail.v2"
 )
 
 // EmailData holds the data for email template
 type EmailData struct {
 	To      string
 	Subject string
-	Message string
+	Body    string
 	Name    string
 	Button  string
 	URL     string
