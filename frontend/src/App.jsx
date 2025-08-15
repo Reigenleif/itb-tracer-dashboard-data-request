@@ -5,6 +5,8 @@ import './App.css';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Request from './pages/Request';
+import RequestManagement from './pages/RequestManagement';
+import RequestDetail from './pages/RequestDetail';
 
 // Component to redirect based on login status
 function HomeRedirect() {
@@ -29,7 +31,8 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/home" element={<Dashboard />} />  {/* This becomes the Home page */}
       <Route path="/sql-query" element={<Request />} />
-      <Route path="/request-management" element={<Request />} />  {/* We'll build this next */}
+      <Route path="/request-management" element={<RequestManagement />} />
+      <Route path="/request-detail/:id" element={<RequestDetail />} />
       <Route path="/request" element={<Request />} />
     </Routes>
   );

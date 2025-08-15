@@ -35,6 +35,27 @@ body {
   box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   padding: 2rem;
   margin-bottom: 2rem;
+  color: #2c3e50 !important;
+}
+
+.card * {
+  color: #2c3e50 !important;
+}
+
+.card h1, .card h2, .card h3, .card h4, .card h5, .card h6 {
+  color: #2c3e50 !important;
+}
+
+.card p {
+  color: #2c3e50 !important;
+}
+
+.card label {
+  color: #555 !important;
+}
+
+.card pre {
+  color: #f8f9fa !important;
 }
 
 .header h1 {
@@ -282,6 +303,51 @@ body {
 
 .tab:hover {
   color: #667eea;
+}
+
+/* Fix white text issues in detail pages */
+.card div, .card span {
+  color: #2c3e50 !important;
+}
+
+.card pre {
+  color: #f8f9fa !important;
+  background: #2c3e50 !important;
+}
+
+/* Specific fixes for request detail page */
+.request-detail-info {
+  color: #2c3e50 !important;
+  background: #f8f9fa !important;
+  padding: 1rem !important;
+  border-radius: 8px !important;
+}
+
+.request-detail-code {
+  color: #f8f9fa !important;
+  background: #2c3e50 !important;
+  padding: 1rem !important;
+  border-radius: 8px !important;
+  font-family: monospace !important;
+}
+
+.request-detail-code pre {
+  color: #f8f9fa !important;
+  background: transparent !important;
+  margin: 0 !important;
+}
+
+/* Force text color in all card content */
+.card .request-info,
+.card .tech-specs,
+.card .student-info {
+  color: #2c3e50 !important;
+}
+
+.card .request-info *,
+.card .tech-specs *,
+.card .student-info * {
+  color: #2c3e50 !important;
 }
 
 /* Additional CodeMirror text visibility fixes */
