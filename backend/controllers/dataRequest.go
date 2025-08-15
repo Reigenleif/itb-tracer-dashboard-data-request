@@ -1,10 +1,14 @@
 package controllers
 
 import (
+	"strings"
+	"strconv"
 	"github.com/gin-gonic/gin"
 	"grad_deploy/initializers"
 	"grad_deploy/models"
 	"net/http"
+	"os"
+
 )
 
 type NewDataRequestRequest struct {
@@ -52,6 +56,88 @@ func NewDataRequest(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Data request created successfully", "data": dataRequest})
 }
+
+type NewSimpleDataRequestRequest struct {
+	Name        string   `json:"name" binding:"required"`
+	NIM         string   `json:"nim" binding:"required"`
+	PhoneNumber string   `json:"phone_number" binding:"required"`
+	Email       string   `json:"email" binding:"required,email"`
+	Format      string   `json:"format" binding:"required"`
+	Purpose     string   `json:"purpose" binding:"required"`
+	Select      []string `json:"select" binding:"required"`
+	Where       []string `json:"where"`
+	Limit       int      `json:"limit"`
+	OrderBy     []string `json:"order_by"`
+}
+
+func NewSimpleDataRequest(c *gin.Context) {
+	var req NewSimpleDataRequestRequest
+
+	// Bind JSON input
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get the fixed table name from environment
+	tableName := os.Getenv("FIXED_TABLE")
+	if tableName == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "FIXED_TABLE not set in environment"})
+		return
+	}
+
+	// Construct SQL query
+	query := "SELECT " + strings.Join(req.Select, ", ") + " FROM " + tableName
+
+	// Add WHERE clause if provided
+	if len(req.Where) > 0 {
+		query += " WHERE " + strings.Join(req.Where, " AND ")
+	}
+
+	// Add ORDER BY clause if provided
+	if len(req.OrderBy) > 0 {
+		query += " ORDER BY " + strings.Join(req.OrderBy, ", ")
+	}
+
+	// Add LIMIT clause if provided
+	if req.Limit > 0 {
+		query += " LIMIT " + strconv.Itoa(req.Limit)
+	}
+
+	// Create new data request
+	dataRequest := models.DataRequest{
+		Name:        req.Name,
+		NIM:         req.NIM,
+		PhoneNumber: req.PhoneNumber,
+		Email:       req.Email,
+		Format:      req.Format,
+		Purpose:     req.Purpose,
+		Table:       tableName,
+		SQLQuery:    query,
+	}
+
+	if err := initializers.FlowDB.Create(&dataRequest).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create data request"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Data request created successfully", "data": dataRequest})
+}
+
+/* Example JSON input for NewSimpleDataRequest:
+{
+	"name": "John Doe",
+	"nim": "123456789",
+	"phone_number": "08123456789",
+	"email": "john.doe@example.com",
+	"format": "CSV",
+	"purpose": "Research",
+	"select": ["id", "name", "year"],
+	"where": ["year > 2020", "department = 'Computer Science'"],
+	"limit": 100,
+	"order_by": ["year DESC", "name ASC"]
+}
+*/
 
 func GetAllDataRequests(c *gin.Context) {
 	var dataRequests []models.DataRequest

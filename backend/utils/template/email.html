@@ -31,7 +31,7 @@
         <td class="header" style="padding:20px 28px; background:linear-gradient(90deg,#0f172a 0%, #0e7490 100%); color:#fff;">
           <h1 class="title" style="font-size:18px; margin:0; line-height:1.15;">{{.Subject}}</h1>
           <p class="subtitle" style="margin:4px 0 0 0; font-size:13px; opacity:0.9;">
-            {% if .Name %}For {{.Name}}{{end}}
+            {{- if .Name -}}For {{.Name}}{{- end -}}
           </p>
         </td>
       </tr>
@@ -63,36 +63,36 @@
             </p>
 
             <p style="margin:0 0 12px 0; font-size:13px; color:#374151;">
-              If the button doesn't work, copy and paste this link into your browser:
+              Jika tombol tidak berfungsi, salin dan tempel tautan ini ke browser Anda:
               <br>
               <a href="{{.URL}}" style="color:#0e7490; word-break:break-all;" target="_blank" rel="noopener noreferrer">{{.URL}}</a>
             </p>
-          {{- end }}
+            {{- end }}
 
-          <hr style="border:none; border-top:1px solid #eef2f7; margin:18px 0;">
+            <hr style="border:none; border-top:1px solid #eef2f7; margin:18px 0;">
 
-          <p class="small" style="margin:0 0 12px 0; color:#374151;">
-            Attached: dataset (if provided) — please treat the data as confidential when required.  
-            If you need the dataset in another format or require additional documentation (data dictionary, sample rows, or schema), reply to this email and we will provide it.
-          </p>
+            <p class="small" style="margin:0 0 12px 0; color:#374151;">
+            Terlampir: dataset (jika tersedia) — harap perlakukan data sebagai rahasia jika diperlukan.  
+            Jika Anda membutuhkan dataset dalam format lain atau membutuhkan dokumentasi tambahan (kamus data, contoh baris, atau skema), balas email ini dan kami akan memberikannya.
+            </p>
 
-          <p style="margin:18px 0 0 0;">
-            Best regards,<br>
-            <strong>The Data Delivery Team</strong>
-          </p>
-        </td>
-      </tr>
+            <p style="margin:18px 0 0 0;">
+            Salam hormat,<br>
+            <strong>Tim Tracer Study ITB</strong>
+            </p>
+          </td>
+          </tr>
 
-      <!-- Footer -->
-      <tr>
-        <td class="footer" style="padding:16px 28px; background:#fbfdff; color:#6b7280; font-size:12px;">
-          <div style="margin-bottom:6px;">
-            Sent to: <span style="color:#0f172a;">{{.To}}</span>
-          </div>
-          <div>
-            Subject: <span style="color:#0f172a;">{{.Subject}}</span>
-          </div>
-        </td>
+          <!-- Footer -->
+          <tr>
+          <td class="footer" style="padding:16px 28px; background:#fbfdff; color:#6b7280; font-size:12px;">
+            <div style="margin-bottom:6px;">
+            Dikirim ke: <span style="color:#0f172a;">{{.To}}</span>
+            </div>
+            <div>
+            Subjek: <span style="color:#0f172a;">{{.Subject}}</span>
+            </div>
+          </td>
       </tr>
     </table>
 

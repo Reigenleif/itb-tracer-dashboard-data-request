@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 
@@ -34,29 +33,16 @@ func PostEmail(c *gin.Context) {
 	csvLink := baseURL + "/sql/" + req.CsvID
 
 	// Create email content
-	subject := "Your Requested Data is Ready"
-	body := fmt.Sprintf(`Dear User,
-
-We are pleased to inform you that your requested data is now available for download.
-
-You can access your data by visiting the following link:
-%s
-
-This link will provide access to the CSV file you requested.
-
-If you have any questions or need further assistance, please don't hesitate to contact our support team.
-
-Thank you for using our service.
-
-Best regards,
-The Data Request Team
-`, csvLink)
+	subject := "Permintaan Data Tracer Selesai"
+	url := csvLink
+	body := "Data Anda telah siap untuk diunduh. Silakan klik tautan di bawah ini untuk mengunduh data Anda:\n"
 
 	// Use the sendEmail function from utils package
 
 	emailData := utils.EmailData{
 		To:      req.Target,
 		Subject: subject,
+		URL:     url,
 		Body:    body,
 	}
 

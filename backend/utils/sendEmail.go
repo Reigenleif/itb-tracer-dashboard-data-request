@@ -14,7 +14,7 @@ import (
 type EmailData struct {
 	To      string
 	Subject string
-	Body    string
+	Body string
 	Name    string
 	Button  string
 	URL     string

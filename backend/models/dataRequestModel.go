@@ -16,5 +16,6 @@ type DataRequest struct {
     YearTo        int       `gorm:"" json:"year_to"`
 	Table         string    `gorm:"" json:"table"`
     Columns      string    `gorm:"" json:"columns"`
+	Filter 			string    `gorm:"" json:"filter"`
     SQLQuery     string    `gorm:"" json:"sql_query"`
 }

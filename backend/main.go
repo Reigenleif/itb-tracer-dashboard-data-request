@@ -31,7 +31,8 @@ func main() {
 	r.POST("/login", controllers.Login)
 	r.POST("/sql", middlewares.RequireAdmin, controllers.PostSQL)
 	r.GET("/sql/:name", controllers.GetSQL)
-	r.POST("/email", middlewares.RequireAdmin, controllers.PostEmail)
+	r.GET("/table-info", controllers.GetTableInfo)
+	r.POST("/email", controllers.PostEmail)
 	// r.GET("/request-history", controllers.GetRequestHistory)
 
 	dataRequests := r.Group("/data-requests")
@@ -52,6 +53,8 @@ func main() {
 		adminLogs.DELETE("/:id", controllers.DeleteAdminLogByID)
 		adminLogs.PUT("/:id", controllers.UpdateAdminLogByID)
 	}
+	
+
 
 	log.Fatal(r.Run())
 }
