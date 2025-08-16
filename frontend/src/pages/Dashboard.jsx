@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [recentRequests, setRecentRequests] = useState([]);
+  const [activeView, setActiveView] = useState('overview'); // 'overview', 'analytics'
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,53 +41,63 @@ export default function Dashboard() {
           <h1>🏠 Admin Dashboard</h1>
           <p style={{ color: '#6c757d', marginTop: '0.5rem' }}>ITB Tracer Study - Data Management System</p>
         </div>
-        <div>
-          <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+            onClick={() => setActiveView(activeView === 'overview' ? 'analytics' : 'overview')}
+            className={`btn ${activeView === 'analytics' ? 'btn-primary' : 'btn-secondary'}`}
+          >
+            {activeView === 'overview' ? '📊 View Analytics' : '🏠 View Overview'}
+          </button>
+          <button onClick={handleLogout} className="btn btn-danger">Logout</button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <span className="stat-number">{stats.totalRequests}</span>
-          <span className="stat-label">Total Requests</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-number" style={{ color: '#ffc107' }}>{stats.pendingRequests}</span>
-          <span className="stat-label">Pending Requests</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-number" style={{ color: '#28a745' }}>{stats.completedRequests}</span>
-          <span className="stat-label">Completed Requests</span>
-        </div>
-        <div className="stat-card">
-          <span className="stat-number" style={{ color: '#667eea' }}>{stats.activeUsers}</span>
-          <span className="stat-label">Active Users</span>
-        </div>
-      </div>
-
-      {/* Admin Tools Navigation */}
-      <div className="card">
-        <h3 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>🛠️ Admin Tools</h3>
-        <div className="stats-grid">
-          <div className="stat-card" style={{ cursor: 'pointer', transition: 'transform 0.2s' }} 
-               onClick={() => navigate('/request-management')}
-               onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-               onMouseLeave={(e) => e.target.style.transform = 'translateY(0px)'}>
-            <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</span>
-            <span className="stat-label" style={{ fontSize: '1rem', fontWeight: '600', color: '#2c3e50' }}>
-              Request Management
-            </span>
-            <span className="stat-label" style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-              Review and approve data requests
-            </span>
+      {activeView === 'analytics' ? (
+        <AnalyticsDashboard />
+      ) : (
+        <>
+          {/* Stats Cards */}
+          <div className="stats-grid">
+            <div className="stat-card">
+              <span className="stat-number">{stats.totalRequests}</span>
+              <span className="stat-label">Total Requests</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-number" style={{ color: '#ffc107' }}>{stats.pendingRequests}</span>
+              <span className="stat-label">Pending Requests</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-number" style={{ color: '#28a745' }}>{stats.completedRequests}</span>
+              <span className="stat-label">Completed Requests</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-number" style={{ color: '#667eea' }}>{stats.activeUsers}</span>
+              <span className="stat-label">Active Users</span>
+            </div>
           </div>
-          
-          <div className="stat-card" style={{ cursor: 'pointer', transition: 'transform 0.2s' }} 
-               onClick={() => navigate('/sql-query')}
-               onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-               onMouseLeave={(e) => e.target.style.transform = 'translateY(0px)'}>
-            <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</span>
+
+          {/* Admin Tools Navigation */}
+          <div className="card">
+            <h3 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>🛠️ Admin Tools</h3>
+            <div className="stats-grid">
+              <div className="stat-card" style={{ cursor: 'pointer', transition: 'transform 0.2s' }} 
+                   onClick={() => navigate('/request-management')}
+                   onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
+                   onMouseLeave={(e) => e.target.style.transform = 'translateY(0px)'}>
+                <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</span>
+                <span className="stat-label" style={{ fontSize: '1rem', fontWeight: '600', color: '#2c3e50' }}>
+                  Request Management
+                </span>
+                <span className="stat-label" style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                  Review and approve data requests
+                </span>
+              </div>
+              
+              <div className="stat-card" style={{ cursor: 'pointer', transition: 'transform 0.2s' }} 
+                   onClick={() => navigate('/sql-query')}
+                   onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
+                   onMouseLeave={(e) => e.target.style.transform = 'translateY(0px)'}>
+                <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</span>
             <span className="stat-label" style={{ fontSize: '1rem', fontWeight: '600', color: '#2c3e50' }}>
               SQL Query Tool
             </span>
@@ -161,6 +173,8 @@ export default function Dashboard() {
           </table>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

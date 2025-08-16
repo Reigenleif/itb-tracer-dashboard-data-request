@@ -1,6 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// Mock data for demo
+const mockRequests = [
+  {
+    id: 1,
+    name: "Ahmad Fauzi",
+    nim: "13520001", 
+    email: "ahmad.fauzi@students.itb.ac.id",
+    phone_number: "081234567890",
+    purpose: "Thesis research on graduate employment trends",
+    format: "CSV",
+    year_from: 2020,
+    year_to: 2024,
+    table: "graduates, employment",
+    status: "PENDING",
+    created_at: "2025-08-10T10:30:00Z"
+  },
+  {
+    id: 2,
+    name: "Sari Dewi",
+    nim: "13520002",
+    email: "sari.dewi@students.itb.ac.id", 
+    phone_number: "081234567891",
+    purpose: "Data analysis for final project on salary distribution",
+    format: "Excel",
+    year_from: 2021,
+    year_to: 2024,
+    table: "graduates, salary",
+    status: "APPROVED",
+    created_at: "2025-08-09T14:20:00Z"
+  }
+];
+
 export default function RequestManagement() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,7 +45,7 @@ export default function RequestManagement() {
   const API_URL = import.meta.env.VITE_API_URL;
 
   // Fetch requests from API
-  const fetchRequests = async () => {
+  const fetchRequests = React.useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -53,85 +85,11 @@ export default function RequestManagement() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Mock data for demo
-  const mockRequests = [
-    {
-      id: 1,
-      name: "Ahmad Fauzi",
-      nim: "13520001", 
-      email: "ahmad.fauzi@students.itb.ac.id",
-      phone_number: "081234567890",
-      purpose: "Thesis research on graduate employment trends",
-      format: "CSV",
-      year_from: 2020,
-      year_to: 2024,
-      table: "graduates, employment",
-      status: "PENDING",
-      created_at: "2025-08-10T10:30:00Z"
-    },
-    {
-      id: 2,
-      name: "Sari Dewi",
-      nim: "13520002",
-      email: "sari.dewi@students.itb.ac.id", 
-      phone_number: "081234567891",
-      purpose: "Data analysis for final project on salary distribution",
-      format: "Excel",
-      year_from: 2021,
-      year_to: 2024,
-      table: "graduates, salary",
-      status: "APPROVED",
-      created_at: "2025-08-09T14:20:00Z"
-    },
-    {
-      id: 3,
-      name: "Budi Santoso",
-      nim: "13520003",
-      email: "budi.santoso@students.itb.ac.id",
-      phone_number: "081234567892", 
-      purpose: "Research on industry placement of ITB graduates",
-      format: "JSON",
-      year_from: 2019,
-      year_to: 2023,
-      table: "graduates, companies, industries",
-      status: "IN_PROGRESS",
-      created_at: "2025-08-08T09:15:00Z"
-    },
-    {
-      id: 4,
-      name: "Maya Putri",
-      nim: "13520004",
-      email: "maya.putri@students.itb.ac.id",
-      phone_number: "081234567893",
-      purpose: "Gender distribution analysis in tech companies",
-      format: "CSV", 
-      year_from: 2022,
-      year_to: 2024,
-      table: "graduates, demographics",
-      status: "COMPLETED",
-      created_at: "2025-08-07T16:45:00Z"
-    },
-    {
-      id: 5,
-      name: "Rizki Anwar", 
-      nim: "13520005",
-      email: "rizki.anwar@students.itb.ac.id",
-      phone_number: "081234567894",
-      purpose: "Alumni network mapping for career guidance",
-      format: "Excel",
-      year_from: 2018,
-      year_to: 2024, 
-      table: "graduates, contacts, networks",
-      status: "PENDING",
-      created_at: "2025-08-06T11:30:00Z"
-    }
-  ];
+  }, [API_URL, searchQuery, sortBy, currentPage]);
 
   useEffect(() => {
     fetchRequests();
-  }, [searchQuery, sortBy, currentPage]);
+  }, [searchQuery, sortBy, currentPage, fetchRequests]);
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);

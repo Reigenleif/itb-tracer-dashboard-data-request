@@ -1,11 +1,50 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import DataPreview from '../components/DataPreview';
+import StatusManager from '../components/StatusManager';
+import EmailManager from '../components/EmailManager';
+
+// Mock data with more comprehensive details
+const mockRequests = {
+  1: {
+    id: 1,
+    name: "Ahmad Fauzi",
+    nim: "13520001",
+    email: "ahmad.fauzi@students.itb.ac.id", 
+    phone_number: "081234567890",
+    purpose: "Thesis research on graduate employment trends in Information Technology field. Need comprehensive data to analyze job placement rates, salary ranges, and industry distribution of ITB Computer Science graduates from 2020-2024.",
+    format: "CSV",
+    year_from: 2020,
+    year_to: 2024,
+    table: "graduates, employment, companies",
+    columns: "name, nim, graduation_year, major, current_job, company_name, salary_range, industry",
+    status: "PENDING",
+    created_at: "2025-08-10T10:30:00Z",
+    updated_at: "2025-08-10T10:30:00Z"
+  },
+  2: {
+    id: 2,
+    name: "Sari Dewi",
+    nim: "13520002",
+    email: "sari.dewi@students.itb.ac.id", 
+    phone_number: "081234567891",
+    purpose: "Data analysis for final project on salary distribution across different engineering majors. Focus on gender pay gap and career progression patterns.",
+    format: "Excel",
+    year_from: 2021,
+    year_to: 2024,
+    table: "graduates, salary_data, demographics",
+    columns: "name, major, graduation_year, gender, current_salary, years_experience, position_level",
+    status: "APPROVED",
+    created_at: "2025-08-09T14:20:00Z",
+    updated_at: "2025-08-09T15:45:00Z"
+  }
+};
 
 export default function RequestDetail() {
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [updating, setUpdating] = useState(false);
+  const [activeTab, setActiveTab] = useState('details'); // 'details', 'preview', 'status', 'email'
+  const [queryResults, setQueryResults] = useState(null);
   const navigate = useNavigate();
   const { id } = useParams();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -16,11 +55,9 @@ export default function RequestDetail() {
       return "-- SQL query will be generated based on requested tables and columns";
     }
 
-    // Parse tables and columns
     const tables = request.table.split(',').map(t => t.trim());
     const columns = request.columns.split(',').map(c => c.trim());
     
-    // Build SELECT clause
     let selectClause = "SELECT ";
     if (columns.length === 0 || columns[0] === '') {
       selectClause += "*";
@@ -28,11 +65,9 @@ export default function RequestDetail() {
       selectClause += columns.join(", ");
     }
     
-    // Build FROM clause with main table
     const mainTable = tables[0];
     let fromClause = `FROM ${mainTable}`;
     
-    // Add JOINs if multiple tables
     let joinClause = "";
     if (tables.length > 1) {
       for (let i = 1; i < tables.length; i++) {
@@ -49,7 +84,6 @@ export default function RequestDetail() {
       }
     }
     
-    // Build WHERE clause based on year range and common filters
     let whereClause = "";
     const conditions = [];
     
@@ -57,7 +91,6 @@ export default function RequestDetail() {
       conditions.push(`graduation_year BETWEEN ${request.year_from} AND ${request.year_to}`);
     }
     
-    // Add purpose-based filters
     if (request.purpose.toLowerCase().includes('computer science') || 
         request.purpose.toLowerCase().includes('tech')) {
       conditions.push("major IN ('Computer Science', 'Information Technology', 'Software Engineering')");
@@ -72,56 +105,18 @@ export default function RequestDetail() {
       whereClause = "\nWHERE " + conditions.join("\n  AND ");
     }
     
-    // Add ORDER BY
     let orderClause = "\nORDER BY graduation_year DESC, name ASC";
     
-    // Combine all parts
     const query = selectClause + "\n" + fromClause + joinClause + whereClause + orderClause + ";";
     
     return query;
   };
 
-  // Mock data for demo with generated queries
-  const mockRequests = {
-    1: {
-      id: 1,
-      name: "Ahmad Fauzi",
-      nim: "13520001",
-      email: "ahmad.fauzi@students.itb.ac.id", 
-      phone_number: "081234567890",
-      purpose: "Thesis research on graduate employment trends in Information Technology field. Need comprehensive data to analyze job placement rates, salary ranges, and industry distribution of ITB Computer Science graduates from 2020-2024.",
-      format: "CSV",
-      year_from: 2020,
-      year_to: 2024,
-      table: "graduates, employment, companies",
-      columns: "name, nim, graduation_year, major, current_job, company_name, salary_range, industry",
-      status: "PENDING",
-      created_at: "2025-08-10T10:30:00Z",
-      updated_at: "2025-08-10T10:30:00Z"
-    },
-    2: {
-      id: 2,
-      name: "Sari Dewi", 
-      nim: "13520002",
-      email: "sari.dewi@students.itb.ac.id",
-      phone_number: "081234567891",
-      purpose: "Data analysis for final project on salary distribution and gender gap analysis in tech industry.",
-      format: "Excel",
-      year_from: 2021,
-      year_to: 2024,
-      table: "graduates, employment, salary, demographics",
-      columns: "name, gender, graduation_year, current_salary, job_level, company_size",
-      status: "APPROVED",
-      created_at: "2025-08-09T14:20:00Z",
-      updated_at: "2025-08-10T09:15:00Z"
-    }
-  };
-
-  // Fetch request details
-  const fetchRequestDetail = async () => {
+  const fetchRequest = React.useCallback(async () => {
     try {
       setLoading(true);
       
+      // Try API first
       const response = await fetch(`${API_URL}/data-requests/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -129,69 +124,25 @@ export default function RequestDetail() {
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch request details');
+      if (response.ok) {
+        const data = await response.json();
+        setRequest(data);
+      } else {
+        throw new Error('API not available');
       }
-
-      const data = await response.json();
-      setRequest(data.data_request || mockRequests[id] || mockRequests[1]);
-      
-    } catch (err) {
-      console.error('API Error, using mock data:', err);
-      setError(null); // Don't show error for demo
-      setRequest(mockRequests[id] || mockRequests[1]);
+    } catch {
+      console.log('Using mock data for demo');
+      // Use mock data
+      const mockRequest = mockRequests[id] || mockRequests[1];
+      setRequest(mockRequest);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Update request status
-  const updateRequestStatus = async (newStatus) => {
-    try {
-      setUpdating(true);
-      
-      const response = await fetch(`${API_URL}/data-requests/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...request,
-          status: newStatus
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update request');
-      }
-
-      // Update local state for demo
-      setRequest(prev => ({
-        ...prev,
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      }));
-
-      alert(`Request ${newStatus.toLowerCase()} successfully!`);
-      
-    } catch (err) {
-      console.error('Update error:', err);
-      // For demo, still update the local state
-      setRequest(prev => ({
-        ...prev, 
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      }));
-      alert(`Request ${newStatus.toLowerCase()} successfully! (Demo mode)`);
-    } finally {
-      setUpdating(false);
-    }
-  };
+  }, [API_URL, id]);
 
   useEffect(() => {
-    fetchRequestDetail();
-  }, [id]);
+    fetchRequest();
+  }, [fetchRequest]);
 
   const getStatusBadge = (status) => {
     const statusStyles = {
@@ -207,7 +158,7 @@ export default function RequestDetail() {
     return (
       <span style={{
         padding: '0.5rem 1rem',
-        borderRadius: '20px',
+        borderRadius: '12px',
         fontSize: '0.9rem',
         fontWeight: '600',
         backgroundColor: style.bg,
@@ -221,11 +172,18 @@ export default function RequestDetail() {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
       year: 'numeric',
-      month: 'long',
+      month: 'long', 
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleStatusUpdate = (updatedRequest) => {
+    setRequest(prev => ({
+      ...prev,
+      ...updatedRequest
+    }));
   };
 
   const handleLogout = () => {
@@ -247,275 +205,203 @@ export default function RequestDetail() {
   if (!request) {
     return (
       <div className="container">
-        <div className="error-message">
-          Request not found.
+        <div style={{ textAlign: 'center', padding: '3rem' }}>
+          <h3>❌ Request not found</h3>
+          <p style={{ color: '#6c757d' }}>The requested data request could not be found.</p>
+          <button onClick={() => navigate('/request-management')} className="btn btn-primary">
+            ← Back to Request Management
+          </button>
         </div>
       </div>
     );
   }
-
   return (
     <div className="container">
+      {/* Header */}
       <div className="header">
         <div>
           <h1>📄 Request Details</h1>
           <p style={{ color: '#6c757d', marginTop: '0.5rem' }}>
-            Request ID: #{request.id} • {getStatusBadge(request.status)}
+            Managing request from {request.name} ({request.nim})
           </p>
         </div>
         <div>
           <button onClick={() => navigate('/request-management')} className="btn btn-secondary" style={{ marginRight: '1rem' }}>
-            ← Back to Requests
+            ← Back to Management
           </button>
           <button onClick={handleLogout} className="btn btn-danger">Logout</button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
-        
-        {/* Student Information */}
-        <div className="card">
-          <h3 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>
-            👤 Student Information
-          </h3>
-          <div className="student-info" style={{ display: 'grid', gap: '1rem' }}>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.25rem' }}>
-                Full Name
-              </label>
-              <p style={{ margin: '0', fontSize: '1.1rem', color: '#2c3e50 !important' }}>{request.name}</p>
-            </div>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.25rem' }}>
-                NIM (Student ID)
-              </label>
-              <p style={{ margin: '0', fontSize: '1.1rem', color: '#2c3e50 !important' }}>{request.nim}</p>
-            </div>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.25rem' }}>
-                Email Address
-              </label>
-              <p style={{ margin: '0', fontSize: '1.1rem', color: '#2c3e50 !important' }}>
-                <a href={`mailto:${request.email}`} style={{ color: '#667eea !important', textDecoration: 'none' }}>
-                  {request.email}
-                </a>
-              </p>
-            </div>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.25rem' }}>
-                Phone Number
-              </label>
-              <p style={{ margin: '0', fontSize: '1.1rem', color: '#2c3e50 !important' }}>
-                <a href={`tel:${request.phone_number}`} style={{ color: '#667eea !important', textDecoration: 'none' }}>
-                  {request.phone_number}
-                </a>
-              </p>
-            </div>
-          </div>
+      {/* Tab Navigation */}
+      <div className="card" style={{ marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid #dee2e6', marginBottom: '0' }}>
+          {[
+            { key: 'details', label: '📋 Details', icon: '📋' },
+            { key: 'preview', label: '🔍 Data Preview', icon: '🔍' },
+            { key: 'status', label: '⚙️ Status Management', icon: '⚙️' },
+            { key: 'email', label: '📧 Email', icon: '📧' }
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: 'none',
+                backgroundColor: activeTab === tab.key ? '#007bff' : 'transparent',
+                color: activeTab === tab.key ? '#fff' : '#6c757d',
+                borderRadius: '8px 8px 0 0',
+                cursor: 'pointer',
+                fontWeight: activeTab === tab.key ? '600' : '400',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Request Information */}
+      {/* Tab Content */}
+      {activeTab === 'details' && (
         <div className="card">
           <h3 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>
             📋 Request Information
           </h3>
-          <div className="request-info" style={{ display: 'grid', gap: '1rem' }}>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.25rem' }}>
-                Purpose & Justification
-              </label>
-              <div className="request-detail-info" style={{ 
-                margin: '0', 
-                lineHeight: '1.6', 
-                backgroundColor: '#f8f9fa !important', 
-                padding: '1rem !important', 
-                borderRadius: '8px !important',
-                color: '#2c3e50 !important'
-              }}>
-                {request.purpose}
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.25rem' }}>
-                  Format Requested
-                </label>
-                <p style={{ margin: '0', fontSize: '1.1rem', color: '#2c3e50 !important' }}>📄 {request.format}</p>
-              </div>
-              <div>
-                <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.25rem' }}>
-                  Year Range
-                </label>
-                <p style={{ margin: '0', fontSize: '1.1rem', color: '#2c3e50 !important' }}>📅 {request.year_from} - {request.year_to}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Technical Specifications */}
-        <div className="card" style={{ gridColumn: '1 / -1' }}>
-          <h3 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>
-            ⚙️ Technical Specifications
-          </h3>
-          <div className="tech-specs" style={{ display: 'grid', gap: '1.5rem' }}>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.5rem' }}>
-                Database Tables
-              </label>
-              <div className="request-detail-info" style={{ 
-                margin: '0', 
-                backgroundColor: '#f8f9fa !important', 
-                padding: '0.75rem !important', 
-                borderRadius: '6px !important',
-                fontFamily: 'monospace',
-                fontSize: '0.95rem',
-                color: '#2c3e50 !important'
-              }}>
-                {request.table}
-              </div>
-            </div>
-            
-            {request.columns && (
-              <div>
-                <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.5rem' }}>
-                  Requested Columns
-                </label>
-                <div className="request-detail-info" style={{ 
-                  margin: '0', 
-                  backgroundColor: '#f8f9fa !important', 
-                  padding: '0.75rem !important', 
-                  borderRadius: '6px !important',
-                  fontFamily: 'monospace',
-                  fontSize: '0.95rem',
-                  color: '#2c3e50 !important'
-                }}>
-                  {request.columns}
-                </div>
-              </div>
-            )}
-
-            {(request.sql_query || request.table) && (
-              <div>
-                <label style={{ fontWeight: '600', color: '#555 !important', display: 'block', marginBottom: '0.5rem' }}>
-                  Generated SQL Query
-                </label>
-                <div className="request-detail-code" style={{ 
-                  backgroundColor: '#2c3e50 !important', 
-                  color: '#f8f9fa !important', 
-                  padding: '1rem !important', 
-                  borderRadius: '8px !important',
-                  fontFamily: 'monospace',
-                  fontSize: '0.9rem',
-                  overflowX: 'auto'
-                }}>
-                  <pre style={{ margin: '0', whiteSpace: 'pre-wrap', color: '#f8f9fa !important' }}>
-                    {request.sql_query || generateSQLQuery(request)}
-                  </pre>
-                </div>
-                <p style={{ fontSize: '0.8rem', color: '#6c757d', marginTop: '0.5rem', fontStyle: 'italic' }}>
-                  💡 Query generated automatically based on requested tables and columns
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Status & Actions */}
-        <div className="card" style={{ gridColumn: '1 / -1' }}>
-          <h3 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>
-            🎯 Status & Actions
-          </h3>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555', display: 'block', marginBottom: '0.5rem' }}>
-                Current Status
-              </label>
-              {getStatusBadge(request.status)}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            {/* Student Information */}
+            <div style={{ 
+              padding: '1.5rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              border: '1px solid #dee2e6'
+            }}>
+              <h4 style={{ marginBottom: '1rem', color: '#495057' }}>👤 Student Information</h4>
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                <div><strong>Name:</strong> {request.name}</div>
+                <div><strong>NIM:</strong> {request.nim}</div>
+                <div><strong>Email:</strong> {request.email}</div>
+                <div><strong>Phone:</strong> {request.phone_number}</div>
+              </div>
             </div>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555', display: 'block', marginBottom: '0.5rem' }}>
-                Submitted On
-              </label>
-              <p style={{ margin: '0' }}>{formatDate(request.created_at)}</p>
+
+            {/* Request Details */}
+            <div style={{ 
+              padding: '1.5rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              border: '1px solid #dee2e6'
+            }}>
+              <h4 style={{ marginBottom: '1rem', color: '#495057' }}>📊 Data Request</h4>
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                <div><strong>Format:</strong> {request.format}</div>
+                <div><strong>Year Range:</strong> {request.year_from} - {request.year_to}</div>
+                <div><strong>Tables:</strong> {request.table}</div>
+                <div><strong>Columns:</strong> {request.columns}</div>
+              </div>
             </div>
-            <div>
-              <label style={{ fontWeight: '600', color: '#555', display: 'block', marginBottom: '0.5rem' }}>
-                Last Updated
-              </label>
-              <p style={{ margin: '0' }}>{formatDate(request.updated_at)}</p>
+
+            {/* Status Information */}
+            <div style={{ 
+              padding: '1.5rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              border: '1px solid #dee2e6'
+            }}>
+              <h4 style={{ marginBottom: '1rem', color: '#495057' }}>📈 Status & Timeline</h4>
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                <div><strong>Current Status:</strong> {getStatusBadge(request.status)}</div>
+                <div><strong>Submitted:</strong> {formatDate(request.created_at)}</div>
+                <div><strong>Last Updated:</strong> {formatDate(request.updated_at)}</div>
+              </div>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            {request.status === 'PENDING' && (
-              <>
-                <button 
-                  className="btn btn-success"
-                  onClick={() => updateRequestStatus('APPROVED')}
-                  disabled={updating}
-                >
-                  {updating ? <span className="loading"></span> : '✅'} Approve Request
-                </button>
-                <button 
-                  className="btn btn-danger"
-                  onClick={() => updateRequestStatus('REJECTED')}
-                  disabled={updating}
-                >
-                  {updating ? <span className="loading"></span> : '❌'} Reject Request
-                </button>
-              </>
-            )}
-            
-            {request.status === 'APPROVED' && (
-              <button 
-                className="btn btn-primary"
-                onClick={() => updateRequestStatus('IN_PROGRESS')}
-                disabled={updating}
-              >
-                {updating ? <span className="loading"></span> : '🔄'} Start Processing
-              </button>
-            )}
-            
-            {request.status === 'IN_PROGRESS' && (
-              <button 
-                className="btn btn-success"
-                onClick={() => updateRequestStatus('COMPLETED')}
-                disabled={updating}
-              >
-                {updating ? <span className="loading"></span> : '🎉'} Mark as Completed
-              </button>
-            )}
+          {/* Purpose */}
+          <div style={{ marginTop: '1.5rem' }}>
+            <h4 style={{ marginBottom: '1rem', color: '#495057' }}>🎯 Research Purpose</h4>
+            <div style={{ 
+              padding: '1rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              border: '1px solid #dee2e6',
+              lineHeight: '1.6'
+            }}>
+              {request.purpose}
+            </div>
+          </div>
 
-            <button className="btn btn-secondary">
-              📧 Send Email Update
-            </button>
-            
-            <button 
-              className="btn btn-primary"
-              onClick={() => {
-                // Store the SQL query for auto-paste in SQL Query tool
-                const sqlQuery = request.sql_query || generateSQLQuery(request);
-                console.log('=== Storing SQL in localStorage ===');
-                console.log('Generated SQL Query:', sqlQuery);
-                localStorage.setItem('autoFillSQL', sqlQuery);
-                console.log('Stored in localStorage:', localStorage.getItem('autoFillSQL'));
-                alert('🚀 Navigating to SQL Query tool with auto-filled query!');
-                navigate('/sql-query');
-              }}
-            >
-              🔍 Execute SQL Query
-            </button>
-            
-            {request.status === 'COMPLETED' && (
-              <button className="btn btn-success">
-                📄 Download Generated Data
+          {/* Generated SQL Query */}
+          <div style={{ marginTop: '1.5rem' }}>
+            <h4 style={{ marginBottom: '1rem', color: '#495057' }}>🔍 Generated SQL Query</h4>
+            <div style={{ 
+              padding: '1rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              border: '1px solid #dee2e6',
+              fontFamily: 'monospace',
+              fontSize: '0.9rem',
+              overflow: 'auto'
+            }}>
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
+                {generateSQLQuery(request)}
+              </pre>
+            </div>
+            <div style={{ marginTop: '1rem' }}>
+              <button 
+                onClick={() => {
+                  localStorage.setItem('autoFillSQL', generateSQLQuery(request));
+                  setActiveTab('preview');
+                }}
+                className="btn btn-primary"
+              >
+                🔍 Preview This Query
               </button>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'preview' && (
+        <DataPreview
+          initialQuery={generateSQLQuery(request)}
+          requestData={request}
+          onQueryChange={() => {
+            // Handle query changes if needed
+          }}
+          onExport={(format, data) => {
+            console.log('Exported data:', format, data);
+            alert(`Data exported as ${format.toUpperCase()}!`);
+          }}
+          onEmail={(data) => {
+            setQueryResults(data);
+            setActiveTab('email');
+          }}
+        />
+      )}
+
+      {activeTab === 'status' && (
+        <StatusManager
+          currentStatus={request.status}
+          requestId={request.id}
+          onStatusUpdate={handleStatusUpdate}
+          onSendEmail={(emailData) => {
+            console.log('Email sent:', emailData);
+          }}
+        />
+      )}
+
+      {activeTab === 'email' && (
+        <EmailManager
+          requestData={request}
+          queryResults={queryResults}
+          onEmailSent={(emailData) => {
+            console.log('Email sent:', emailData);
+            alert('📧 Email sent successfully!');
+          }}
+        />
+      )}
     </div>
   );
 }
