@@ -38,6 +38,7 @@ func main() {
 	dataRequests := r.Group("/data-requests")
 	{
 		dataRequests.POST("/", controllers.NewDataRequest)
+		dataRequests.POST("/simple", controllers.NewSimpleDataRequest)
 		dataRequests.GET("/", controllers.GetAllDataRequests)
 		dataRequests.GET("/filter", controllers.GetFilteredDataRequests)
 		dataRequests.GET("/:id", controllers.GetDataRequestByID)

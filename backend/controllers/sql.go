@@ -102,7 +102,7 @@ func PostSQL(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"name": name})
+    c.JSON(http.StatusOK, gin.H{"csv_id": name})
 }
 
 func GetSQL(c *gin.Context) {
