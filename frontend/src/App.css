@@ -27,6 +27,23 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  color: #2c3e50 !important;
+}
+
+.container * {
+  color: inherit !important;
+}
+
+.container h1, .container h2, .container h3, .container h4, .container h5, .container h6 {
+  color: #2c3e50 !important;
+}
+
+.container p {
+  color: #2c3e50 !important;
+}
+
+.container span {
+  color: inherit !important;
 }
 
 .card {
@@ -58,8 +75,17 @@ body {
   color: #f8f9fa !important;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
 .header h1 {
-  color: #2c3e50;
+  color: #2c3e50 !important;
   font-size: 2rem;
   font-weight: 600;
 }
@@ -68,13 +94,17 @@ body {
   color: #2c3e50 !important;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #f0f0f0;
+.header * {
+  color: #2c3e50 !important;
+}
+
+/* Override any inherited styles */
+.header div {
+  color: #2c3e50 !important;
+}
+
+.header span {
+  color: inherit !important;
 }
 
 .btn {
@@ -140,15 +170,15 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-  background: white;
+  background: white !important;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 .results-table th {
-  background: linear-gradient(45deg, #667eea, #764ba2);
-  color: white;
+  background: linear-gradient(45deg, #667eea, #764ba2) !important;
+  color: white !important;
   padding: 1rem;
   text-align: left;
   font-weight: 600;
@@ -170,6 +200,19 @@ body {
   color: #2c3e50 !important;
 }
 
+/* Force all table content to be readable */
+.results-table * {
+  color: inherit !important;
+}
+
+.results-table th * {
+  color: white !important;
+}
+
+.results-table td * {
+  color: #2c3e50 !important;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -178,12 +221,22 @@ body {
 }
 
 .stat-card {
-  background: white;
+  background: white !important;
   padding: 1.5rem;
   border-radius: 10px;
   box-shadow: 0 3px 15px rgba(0,0,0,0.08);
   text-align: center;
   border-left: 4px solid #667eea;
+  color: #2c3e50 !important;
+}
+
+.stat-card * {
+  color: #2c3e50 !important;
+}
+
+.stat-card .stat-label {
+  color: #2c3e50 !important;
+  font-weight: 600 !important;
 }
 
 .stat-number {
@@ -235,8 +288,20 @@ body {
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #555;
+  color: #555 !important;
   font-weight: 500;
+}
+
+/* Override dark mode for labels */
+@media (prefers-color-scheme: dark) {
+  .form-group label,
+  label {
+    color: #555 !important;
+  }
+  
+  .card label {
+    color: #555 !important;
+  }
 }
 
 .form-control {
@@ -246,12 +311,46 @@ body {
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
+  background-color: white !important;
+  color: #2c3e50 !important;
 }
 
 .form-control:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background-color: white !important;
+  color: #2c3e50 !important;
+}
+
+/* Override dark mode for form controls */
+@media (prefers-color-scheme: dark) {
+  .form-control {
+    background-color: white !important;
+    color: #2c3e50 !important;
+    border-color: #e9ecef !important;
+  }
+  
+  .form-control:focus {
+    background-color: white !important;
+    color: #2c3e50 !important;
+    border-color: #667eea !important;
+  }
+  
+  .form-control::placeholder {
+    color: #6c757d !important;
+  }
+  
+  /* Fix select dropdowns */
+  select.form-control {
+    background-color: white !important;
+    color: #2c3e50 !important;
+  }
+  
+  select.form-control option {
+    background-color: white !important;
+    color: #2c3e50 !important;
+  }
 }
 
 .error-message {
@@ -299,6 +398,106 @@ body {
   color: #667eea;
   border-bottom-color: #667eea;
   font-weight: 600;
+}
+
+/* Disable dark mode - force light mode always */
+@media (prefers-color-scheme: dark) {
+  .card {
+    background: white !important;
+    border-color: #e2e8f0 !important;
+    color: #2c3e50 !important;
+  }
+  
+  .container {
+    background: transparent !important;
+    color: #2c3e50 !important;
+  }
+  
+  .container * {
+    color: #2c3e50 !important;
+  }
+  
+  .stat-card {
+    background: white !important;
+    color: #2c3e50 !important;
+  }
+  
+  .stat-card * {
+    color: #2c3e50 !important;
+  }
+  
+  /* Keep table headers as intended */
+  .results-table th {
+    background: linear-gradient(45deg, #667eea, #764ba2) !important;
+    color: white !important;
+  }
+  
+  .results-table th * {
+    color: white !important;
+  }
+}
+.container .stat-card,
+.container .stat-card *,
+.container .card,
+.container .card *,
+.container .header,
+.container .header * {
+  color: #2c3e50 !important;
+}
+
+/* Override any dark text that might conflict */
+.container .stat-card .stat-label,
+.container .stat-card span {
+  color: #2c3e50 !important;
+  font-weight: inherit !important;
+}
+
+/* Exceptions for elements that should stay their original color */
+.container .results-table th,
+.container .results-table th * {
+  color: white !important;
+}
+
+.container .btn,
+.container .btn * {
+  color: inherit !important;
+}
+
+/* Status badges keep their colors */
+.container span[style*="background"] {
+  color: inherit !important;
+}
+
+/* Ensure all inputs and selects are always light theme */
+input, select, textarea {
+  background-color: white !important;
+  color: #2c3e50 !important;
+  border: 2px solid #e9ecef !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  background-color: white !important;
+  color: #2c3e50 !important;
+  border-color: #667eea !important;
+}
+
+input::placeholder, select::placeholder, textarea::placeholder {
+  color: #6c757d !important;
+}
+
+/* Specific override for search and sort controls */
+.card input[type="text"],
+.card select {
+  background: white !important;
+  color: #2c3e50 !important;
+  border: 2px solid #e9ecef !important;
+}
+
+.card input[type="text"]:focus,
+.card select:focus {
+  background: white !important;
+  color: #2c3e50 !important;
+  border-color: #667eea !important;
 }
 
 .tab:hover {
