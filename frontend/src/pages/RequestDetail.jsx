@@ -126,7 +126,7 @@ export default function RequestDetail() {
 
       if (response.ok) {
         const data = await response.json();
-        setRequest(data);
+        setRequest(data.data_request);
       } else {
         throw new Error('API not available');
       }
@@ -215,6 +215,8 @@ export default function RequestDetail() {
       </div>
     );
   }
+
+  console.log('Current Request:', request);
   return (
     <div className="container">
       {/* Header */}
@@ -345,7 +347,7 @@ export default function RequestDetail() {
               overflow: 'auto'
             }}>
               <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
-                {generateSQLQuery(request)}
+                {request.sql_query ?? generateSQLQuery(request)}
               </pre>
             </div>
             <div style={{ marginTop: '1rem' }}>

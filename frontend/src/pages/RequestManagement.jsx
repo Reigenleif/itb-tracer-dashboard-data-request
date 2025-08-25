@@ -70,7 +70,8 @@ export default function RequestManagement() {
       
       // Use mock data for demo if API fails
       if (!data.data_requests) {
-        setRequests(mockRequests);
+        setError('Failed to fetch requests. Please try again later.');
+        setRequests([]);
       } else {
         setRequests(data.data_requests);
       }
@@ -78,9 +79,7 @@ export default function RequestManagement() {
       // Calculate total pages (assuming 10 items per page)
       setTotalPages(Math.ceil((data.data_requests?.length || mockRequests.length) / 10));
     } catch (err) {
-      console.error('API Error, using mock data:', err);
-      setError(null); // Don't show error for demo
-      setRequests(mockRequests);
+      setError(err.message || 'An error occurred while fetching requests.');
       setTotalPages(1);
     } finally {
       setLoading(false);
@@ -254,12 +253,12 @@ export default function RequestManagement() {
                       </div>
                     </td>
                     <td>
-                      <div style={{ maxWidth: '200px' }}>
-                        {request.purpose.length > 50 
-                          ? `${request.purpose.substring(0, 50)}...`
-                          : request.purpose
-                        }
-                      </div>
+                        <div style={{ maxWidth: '200px' }}>
+                          {(request.purpose ? request.purpose.length : 0) > 50
+                            ? `${(request.purpose || '').substring(0, 50)}...`
+                            : (request.purpose || '—')
+                          }
+                        </div>
                     </td>
                     <td>
                       <div>

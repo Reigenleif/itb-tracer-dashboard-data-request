@@ -1,14 +1,14 @@
 package controllers
 
 import (
-	"strings"
-	"strconv"
-	"github.com/gin-gonic/gin"
 	"grad_deploy/initializers"
 	"grad_deploy/models"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 
+	"github.com/gin-gonic/gin"
 )
 
 type NewDataRequestRequest struct {
@@ -200,7 +200,7 @@ func GetDataRequestByID(c *gin.Context) {
 	id := c.Param("id")
 	var dataRequest models.DataRequest
 
-	if err := initializers.FlowDB.First(&dataRequest, id).Error; err != nil {
+	if err := initializers.FlowDB.First(&dataRequest, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Data request not found"})
 		return
 	}
@@ -212,7 +212,7 @@ func DeleteDataRequestByID(c *gin.Context) {
 	id := c.Param("id")
 	var dataRequest models.DataRequest
 
-	if err := initializers.FlowDB.First(&dataRequest, id).Error; err != nil {
+	if err := initializers.FlowDB.First(&dataRequest, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Data request not found"})
 		return
 	}
@@ -221,7 +221,7 @@ func DeleteDataRequestByID(c *gin.Context) {
 func UpdateDataRequestByID(c *gin.Context) {
 	id := c.Param("id")
 	var dataRequest models.DataRequest
-	if err := initializers.FlowDB.First(&dataRequest, id).Error; err != nil {
+	if err := initializers.FlowDB.First(&dataRequest, "id = ?", id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Data request not found"})
 		return
 	}
