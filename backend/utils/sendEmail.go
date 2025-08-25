@@ -14,10 +14,12 @@ import (
 type EmailData struct {
 	To      string
 	Subject string
-	Body string
+	Body    string
 	Name    string
 	Button  string
 	URL     string
+	// Attachments holds file paths to attach to the email
+	Attachments []string
 }
 
 // SendEmail sends an email using Gomail with a HTML template
@@ -58,6 +60,10 @@ func SendEmail(data EmailData) error {
 
 	dialer := gomail.NewDialer(host, portInt, username, password)
 
+	// Attach files if any
+	for _, fpath := range data.Attachments {
+		mailer.Attach(fpath)
+	}
 	// Send email
 	if err := dialer.DialAndSend(mailer); err != nil {
 		return err

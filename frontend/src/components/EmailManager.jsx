@@ -14,6 +14,8 @@ export default function EmailManager({
   });
   const [loading, setLoading] = useState(false);
   const [emailHistory, setEmailHistory] = useState([]);
+  // State for file attachment
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const emailTemplates = {
     approved: {
@@ -89,26 +91,25 @@ ITB Tracer Study Team`
     setLoading(true);
 
     try {
-      const emailPayload = {
-        to: emailData.to,
-        subject: emailData.subject,
-        message: emailData.message,
-        request_id: requestData?.id,
-        include_results: emailData.includeResults,
-        result_format: emailData.resultFormat
-      };
-
-      if (emailData.includeResults && queryResults) {
-        emailPayload.attachment_data = queryResults;
+      // Prepare multipart form data for file upload
+      const formData = new FormData();
+  formData.append('target', emailData.to);
+      formData.append('subject', emailData.subject);
+  formData.append('body', emailData.message);
+      formData.append('request_id', requestData?.id);
+      formData.append('include_results', emailData.includeResults);
+      formData.append('result_format', emailData.resultFormat);
+      // Attach selected file if provided
+      if (selectedFile) {
+        formData.append('file', selectedFile);
       }
-
       const response = await fetch(`${import.meta.env.VITE_API_URL}/email`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          // Let browser set Content-Type with boundary
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(emailPayload)
+        body: formData
       });
 
       if (response.ok) {
@@ -280,6 +281,18 @@ ITB Tracer Study Team`
               )}
             </div>
           )}
+
+          {/* File Attachment */}
+          <div style={{ marginTop: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '600' }}>
+              File Attachment:
+            </label>
+            <input
+              type="file"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="form-control"
+            />
+          </div>
         </div>
 
         {/* Send Button */}

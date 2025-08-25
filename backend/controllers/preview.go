@@ -29,6 +29,7 @@ func PostSQLPreview(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	defer rows.Close()
 
 	cols, err := rows.Columns()

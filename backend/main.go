@@ -9,7 +9,6 @@ import (
 
 	"grad_deploy/controllers"
 	"grad_deploy/initializers"
-	"grad_deploy/middlewares"
 )
 
 func main() {

@@ -54,6 +54,8 @@ export default function DataPreview({
   };
 
   const executeQuery = async () => {
+    /* Function to test or preview a query, hits an endpoint that returns table in an array format */
+
     if (!sqlQuery.trim()) {
       setError('Please enter a SQL query');
       return;
@@ -63,18 +65,18 @@ export default function DataPreview({
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/sql`, {
+      const response = await fetch(`${API_URL}/sql/preview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ query: sqlQuery })
+        body: JSON.stringify({ sql: sqlQuery })
       });
 
       if (response.ok) {
         const data = await response.json();
-        setQueryResult(data);
+        setQueryResult(data.table);
       } else {
         throw new Error('API not available');
       }
