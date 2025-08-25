@@ -29,7 +29,9 @@ func main() {
 	r.Use(cors.New(config))
 
 	r.POST("/login", controllers.Login)
-	r.POST("/sql", middlewares.RequireAdmin, controllers.PostSQL)
+	r.POST("/sql", controllers.PostSQL)
+	// Register SQL preview endpoint
+	r.POST("/sql/preview", controllers.PostSQLPreview)
 	r.GET("/sql/:name", controllers.GetSQL)
 	r.GET("/table-info", controllers.GetTableInfo)
 	r.POST("/email", controllers.PostEmail)
@@ -54,8 +56,6 @@ func main() {
 		adminLogs.DELETE("/:id", controllers.DeleteAdminLogByID)
 		adminLogs.PUT("/:id", controllers.UpdateAdminLogByID)
 	}
-	
-
 
 	log.Fatal(r.Run())
 }
