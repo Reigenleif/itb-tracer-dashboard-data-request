@@ -34,6 +34,9 @@ func main() {
 	r.GET("/sql/:name", controllers.GetSQL)
 	r.GET("/table-info", controllers.GetTableInfo)
 	r.POST("/email", controllers.PostEmail)
+	// Analytics endpoints
+	r.GET("/analytics", controllers.GetAnalytics)
+	r.GET("/analytics/filtered", controllers.GetAnalyticsFiltered)
 	// r.GET("/request-history", controllers.GetRequestHistory)
 
 	dataRequests := r.Group("/data-requests")

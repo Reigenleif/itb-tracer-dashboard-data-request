@@ -39,6 +39,10 @@ export default function RequestManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('created_at DESC');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [formatFilter, setFormatFilter] = useState('ALL');
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState(null);
@@ -54,16 +58,30 @@ export default function RequestManagement() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch requests from API - now uses debouncedSearchQuery
+  // Fetch requests from API - now uses debouncedSearchQuery and server-side filtering
   const fetchRequests = React.useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
-        search_query: debouncedSearchQuery, // Use debounced version
+        search_query: debouncedSearchQuery,
         sort_by: sortBy,
         page: currentPage.toString(),
         limit: '10'
       });
+
+      // Add filter parameters
+      if (statusFilter && statusFilter !== 'ALL') {
+        params.append('status', statusFilter);
+      }
+      if (formatFilter && formatFilter !== 'ALL') {
+        params.append('format', formatFilter);
+      }
+      if (dateFromFilter) {
+        params.append('date_from', dateFromFilter);
+      }
+      if (dateToFilter) {
+        params.append('date_to', dateToFilter);
+      }
 
       const response = await fetch(`${API_URL}/data-requests/filter?${params}`, {
         headers: {
@@ -77,25 +95,51 @@ export default function RequestManagement() {
       }
 
       const data = await response.json();
+      setRequests(data.data_requests || []);
       
-      // Use mock data for demo if API fails
-      if (!data.data_requests) {
-        setRequests(mockRequests);
-      } else {
-        setRequests(data.data_requests);
-      }
-      
-      // Calculate total pages (assuming 10 items per page)
-      setTotalPages(Math.ceil((data.data_requests?.length || mockRequests.length) / 10));
+      // Calculate total pages (you might want to get this from backend response)
+      setTotalPages(Math.ceil((data.data_requests?.length || 0) / 10));
     } catch (err) {
       console.error('API Error, using mock data:', err);
-      setError(null); // Don't show error for demo
-      setRequests(mockRequests);
-      setTotalPages(1);
+      setError(null);
+      
+      // Apply client-side filtering to mock data as fallback
+      let filteredRequests = [...mockRequests];
+      
+      if (debouncedSearchQuery) {
+        filteredRequests = filteredRequests.filter(req => 
+          req.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          req.nim.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          req.email.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+        );
+      }
+      
+      if (statusFilter !== 'ALL') {
+        filteredRequests = filteredRequests.filter(req => req.status === statusFilter);
+      }
+      
+      if (formatFilter !== 'ALL') {
+        filteredRequests = filteredRequests.filter(req => req.format === formatFilter);
+      }
+      
+      if (dateFromFilter) {
+        filteredRequests = filteredRequests.filter(req => 
+          new Date(req.created_at) >= new Date(dateFromFilter)
+        );
+      }
+      
+      if (dateToFilter) {
+        filteredRequests = filteredRequests.filter(req => 
+          new Date(req.created_at) <= new Date(dateToFilter)
+        );
+      }
+      
+      setRequests(filteredRequests);
+      setTotalPages(Math.ceil(filteredRequests.length / 10));
     } finally {
       setLoading(false);
     }
-  }, [API_URL, debouncedSearchQuery, sortBy, currentPage]); // Use debouncedSearchQuery instead of searchQuery
+  }, [API_URL, debouncedSearchQuery, sortBy, statusFilter, formatFilter, dateFromFilter, dateToFilter, currentPage]);
 
   useEffect(() => {
     fetchRequests();
@@ -115,6 +159,36 @@ export default function RequestManagement() {
 
   const handleSort = (e) => {
     setSortBy(e.target.value);
+    setCurrentPage(1);
+  };
+
+  // Filter handlers
+  const handleStatusFilter = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleFormatFilter = (e) => {
+    setFormatFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleDateFromFilter = (e) => {
+    setDateFromFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleDateToFilter = (e) => {
+    setDateToFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setStatusFilter('ALL');
+    setFormatFilter('ALL');
+    setDateFromFilter('');
+    setDateToFilter('');
+    setSearchQuery('');
     setCurrentPage(1);
   };
 
@@ -188,8 +262,10 @@ export default function RequestManagement() {
 
       {/* Search and Filter Controls */}
       <div className="card">
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1', minWidth: '200px' }}>
+        <h4 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>Search & Filter Options</h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+          {/* Search */}
+          <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#2c3e50' }}>
               Search Requests
             </label>
@@ -199,7 +275,6 @@ export default function RequestManagement() {
               placeholder="Search by name, NIM, or email..."
               value={searchQuery}
               onChange={handleSearch}
-              style={{ width: '100%' }}
             />
             {searchQuery !== debouncedSearchQuery && (
               <small style={{ color: '#6c757d', fontSize: '0.8rem', marginTop: '0.25rem' }}>
@@ -207,7 +282,45 @@ export default function RequestManagement() {
               </small>
             )}
           </div>
-          <div style={{ minWidth: '200px' }}>
+
+          {/* Status Filter */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#2c3e50' }}>
+              Filter by Status
+            </label>
+            <select 
+              className="form-control"
+              value={statusFilter}
+              onChange={handleStatusFilter}
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
+
+          {/* Format Filter */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#2c3e50' }}>
+              Filter by Format
+            </label>
+            <select 
+              className="form-control"
+              value={formatFilter}
+              onChange={handleFormatFilter}
+            >
+              <option value="ALL">All Formats</option>
+              <option value="CSV">CSV</option>
+              <option value="Excel">Excel</option>
+              <option value="JSON">JSON</option>
+            </select>
+          </div>
+
+          {/* Sort */}
+          <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#2c3e50' }}>
               Sort By
             </label>
@@ -223,7 +336,42 @@ export default function RequestManagement() {
               <option value="status ASC">Status</option>
             </select>
           </div>
+        </div>
+
+        {/* Date Range Filters */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#2c3e50' }}>
+              From Date
+            </label>
+            <input
+              type="date"
+              className="form-control"
+              value={dateFromFilter}
+              onChange={handleDateFromFilter}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#2c3e50' }}>
+              To Date
+            </label>
+            <input
+              type="date"
+              className="form-control"
+              value={dateToFilter}
+              onChange={handleDateToFilter}
+            />
+          </div>
+
           <div style={{ alignSelf: 'flex-end' }}>
+            <button 
+              onClick={clearFilters}
+              className="btn btn-secondary"
+              style={{ marginRight: '1rem' }}
+            >
+              🧹 Clear Filters
+            </button>
             <button 
               onClick={fetchRequests}
               className="btn btn-primary"
@@ -233,6 +381,18 @@ export default function RequestManagement() {
             </button>
           </div>
         </div>
+
+        {/* Active Filters Display */}
+        {(statusFilter !== 'ALL' || formatFilter !== 'ALL' || dateFromFilter || dateToFilter || searchQuery) && (
+          <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+            <strong style={{ color: '#2c3e50' }}>Active Filters: </strong>
+            {searchQuery && <span className="filter-tag">Search: "{searchQuery}"</span>}
+            {statusFilter !== 'ALL' && <span className="filter-tag">Status: {statusFilter}</span>}
+            {formatFilter !== 'ALL' && <span className="filter-tag">Format: {formatFilter}</span>}
+            {dateFromFilter && <span className="filter-tag">From: {dateFromFilter}</span>}
+            {dateToFilter && <span className="filter-tag">To: {dateToFilter}</span>}
+          </div>
+        )}
       </div>
 
       {error && (
@@ -256,7 +416,7 @@ export default function RequestManagement() {
             <table className="results-table">
               <thead>
                 <tr>
-                  <th>Student Info</th>
+                  <th>Requester Info</th>
                   <th>Purpose</th>
                   <th>Data Request</th>
                   <th>Status</th>

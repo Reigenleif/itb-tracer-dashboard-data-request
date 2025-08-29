@@ -154,6 +154,10 @@ func GetAllDataRequests(c *gin.Context) {
 type GetFilteredDataRequestsRequest struct {
 	SearchQuery string `form:"search_query"`
 	SortBy      string `form:"sort_by"`
+	Status      string `form:"status"`
+	Format      string `form:"format"`
+	DateFrom    string `form:"date_from"`
+	DateTo      string `form:"date_to"`
 	Page        int    `form:"page" binding:"omitempty,min=1"`
 	Limit       int    `form:"limit" binding:"omitempty,min=1,max=100"`
 }
@@ -173,6 +177,24 @@ func GetFilteredDataRequests(c *gin.Context) {
 
 	if req.SearchQuery != "" {
 		query = query.Where("name ILIKE ? OR nim ILIKE ? OR email ILIKE ?", "%"+req.SearchQuery+"%", "%"+req.SearchQuery+"%", "%"+req.SearchQuery+"%")
+	}
+
+	// Status filter
+	if req.Status != "" && req.Status != "ALL" {
+		query = query.Where("status = ?", req.Status)
+	}
+
+	// Format filter
+	if req.Format != "" && req.Format != "ALL" {
+		query = query.Where("format = ?", req.Format)
+	}
+
+	// Date range filter
+	if req.DateFrom != "" {
+		query = query.Where("created_at >= ?", req.DateFrom)
+	}
+	if req.DateTo != "" {
+		query = query.Where("created_at <= ?", req.DateTo)
 	}
 
 	if req.SortBy != "" {

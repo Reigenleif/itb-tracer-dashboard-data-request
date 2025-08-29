@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Request from './pages/Request';
 import RequestManagement from './pages/RequestManagement';
 import RequestDetail from './pages/RequestDetail';
+import Analytics from './pages/Analytics';
 
 // Component to redirect based on login status
 function HomeRedirect() {
@@ -34,6 +35,7 @@ export default function App() {
       <Route path="/request-management" element={<RequestManagement />} />
       <Route path="/request-detail/:id" element={<RequestDetail />} />
       <Route path="/request" element={<Request />} />
+      <Route path="/analytics" element={<Analytics />} />
     </Routes>
   );
 }

@@ -107,6 +107,7 @@ export default function Dashboard() {
           </div>
           
           <div className="stat-card" style={{ cursor: 'pointer', transition: 'transform 0.2s' }} 
+               onClick={() => navigate('/analytics')}
                onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
                onMouseLeave={(e) => e.target.style.transform = 'translateY(0px)'}>
             <span style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</span>
@@ -114,7 +115,7 @@ export default function Dashboard() {
               Analytics & Reports
             </span>
             <span className="stat-label" style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>
-              Generate data insights
+              Generate data insights and reports
             </span>
           </div>
           
