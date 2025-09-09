@@ -4,7 +4,8 @@ import (
 	"grad_deploy/initializers"
 	"grad_deploy/tools"
 	"net/http"
-
+	"log"
+	"strings"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +19,7 @@ func PostSQLPreview(c *gin.Context) {
 		return
 	}
 
+	log.Printf("Received SQL preview request: %s", body.SQL)
 	if !tools.IsSelectOnly(body.SQL) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "Only SELECT statements are allowed"})
 		return
@@ -26,7 +28,20 @@ func PostSQLPreview(c *gin.Context) {
 	// Execute query
 	rows, err := initializers.DB.Raw(body.SQL).Rows()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	       // Custom error handling for missing table
+	       errMsg := err.Error()
+	       if strings.Contains(errMsg, "ERROR: relation ") && strings.Contains(errMsg, "does not exist (SQLSTATE 42P01)") {
+		       // Extract table name
+		       start := strings.Index(errMsg, "\"")
+		       end := strings.Index(errMsg[start+1:], "\"")
+		       tableName := "unknown"
+		       if start != -1 && end != -1 {
+			       tableName = errMsg[start+1 : start+1+end]
+		       }
+		       c.JSON(http.StatusInternalServerError, gin.H{"error": "ERROR : table \"" + tableName + "\" does not exist"})
+	       } else {
+		       c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+	       }
 		return
 	}
 
@@ -34,7 +49,19 @@ func PostSQLPreview(c *gin.Context) {
 
 	cols, err := rows.Columns()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	       // Custom error handling for missing table
+	       errMsg := err.Error()
+	       if strings.Contains(errMsg, "ERROR: relation ") && strings.Contains(errMsg, "does not exist (SQLSTATE 42P01)") {
+		       start := strings.Index(errMsg, "\"")
+		       end := strings.Index(errMsg[start+1:], "\"")
+		       tableName := "unknown"
+		       if start != -1 && end != -1 {
+			       tableName = errMsg[start+1 : start+1+end]
+		       }
+		       c.JSON(http.StatusInternalServerError, gin.H{"error": "ERROR : table \"" + tableName + "\" does not exist"})
+	       } else {
+		       c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+	       }
 		return
 	}
 
@@ -54,7 +81,19 @@ func PostSQLPreview(c *gin.Context) {
 	}
 	for rows.Next() {
 		if err := rows.Scan(ptrs...); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		       // Custom error handling for missing table
+		       errMsg := err.Error()
+		       if strings.Contains(errMsg, "ERROR: relation ") && strings.Contains(errMsg, "does not exist (SQLSTATE 42P01)") {
+			       start := strings.Index(errMsg, "\"")
+			       end := strings.Index(errMsg[start+1:], "\"")
+			       tableName := "unknown"
+			       if start != -1 && end != -1 {
+				       tableName = errMsg[start+1 : start+1+end]
+			       }
+			       c.JSON(http.StatusInternalServerError, gin.H{"error": "ERROR : table \"" + tableName + "\" does not exist"})
+		       } else {
+			       c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		       }
 			return
 		}
 		row := make([]interface{}, len(cols))

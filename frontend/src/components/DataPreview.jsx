@@ -74,22 +74,26 @@ export default function DataPreview({
         body: JSON.stringify({ sql: sqlQuery })
       });
 
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
         setQueryResult(data.table);
       } else {
-        throw new Error('API not available');
+        // Display backend error message if available
+        setError(data.error || data.message || 'API not available');
+        setQueryResult(null);
       }
-    } catch {
+    } catch (err) {
+      // If fetch fails, fallback to mock data
       console.log('Using mock data for preview');
       setTimeout(() => {
         const mockResult = generateMockData();
         setQueryResult(mockResult);
         setLoading(false);
       }, 800);
+      setError(err?.message || 'Failed to fetch data.');
       return;
     }
-    
+
     setLoading(false);
   };
 

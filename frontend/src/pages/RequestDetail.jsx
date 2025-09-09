@@ -51,6 +51,10 @@ export default function RequestDetail() {
 
   // Generate realistic SQL query based on request data
   const generateSQLQuery = (request) => {
+    if (request.sql_query && request.sql_query.length > 0) {
+      return request.sql_query;
+    }
+
     if (!request.table || !request.columns) {
       return "-- SQL query will be generated based on requested tables and columns";
     }

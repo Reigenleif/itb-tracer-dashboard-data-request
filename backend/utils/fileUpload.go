@@ -20,7 +20,7 @@ func HandleFileUpload(c *gin.Context, file *multipart.FileHeader, path string) (
 		return "", err
 	}
 	// Return URL from uploaded file
-	return "/uploads" + path + fileName, nil
+	return "/uploads" + path + "/" + fileName, nil
 }
 
 func DeleteFile(filePath string) error {
