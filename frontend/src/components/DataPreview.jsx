@@ -75,14 +75,72 @@ export default function DataPreview({
       });
 
       const data = await response.json();
+      console.log('Raw backend response:', data);
+      
       if (response.ok) {
-        setQueryResult(data.table);
+        // Backend returns {table: [[headers], [row1], [row2], ...]}
+        // We need to transform it to the expected format
+        const table = data.table;
+        console.log('Backend table data:', table);
+        
+        if (table && Array.isArray(table) && table.length > 0) {
+          const columns = table[0]; // First row contains headers
+          const rows = table.slice(1); // Remaining rows are data
+          
+          console.log('Extracted columns:', columns);
+          console.log('Extracted rows:', rows);
+          console.log('columns type:', typeof columns, 'is array:', Array.isArray(columns));
+          console.log('rows type:', typeof rows, 'is array:', Array.isArray(rows));
+          
+          // Validate columns is an array
+          if (!Array.isArray(columns)) {
+            console.error('Columns is not an array:', columns);
+            setError('Invalid data format received from server');
+            setQueryResult(null);
+            return;
+          }
+          
+          // Transform rows from array format to object format
+          const transformedRows = rows.map((row, index) => {
+            const rowObj = {};
+            if (Array.isArray(row)) {
+              columns.forEach((col, colIndex) => {
+                rowObj[col] = row[colIndex];
+              });
+            } else {
+              console.warn(`Row ${index} is not an array:`, row);
+              // If row is already an object, use it as is
+              return row;
+            }
+            return rowObj;
+          });
+
+          const transformedResult = {
+            data: transformedRows,
+            columns: columns,
+            total_rows: rows.length,
+            execution_time: "< 0.1s" // We don't get this from backend, so use a default
+          };
+
+          console.log('Final transformed result:', transformedResult);
+          setQueryResult(transformedResult);
+        } else {
+          // Empty result set
+          console.log('Empty result set received');
+          setQueryResult({
+            data: [],
+            columns: [],
+            total_rows: 0,
+            execution_time: "< 0.1s"
+          });
+        }
       } else {
         // Display backend error message if available
         setError(data.error || data.message || 'API not available');
         setQueryResult(null);
       }
     } catch (err) {
+      console.error('Query execution error:', err);
       // If fetch fails, fallback to mock data
       console.log('Using mock data for preview');
       setTimeout(() => {
@@ -90,7 +148,7 @@ export default function DataPreview({
         setQueryResult(mockResult);
         setLoading(false);
       }, 800);
-      setError(err?.message || 'Failed to fetch data.');
+      setError(err?.message || 'Failed to fetch data. Using mock data for demo.');
       return;
     }
 
@@ -121,11 +179,17 @@ export default function DataPreview({
   };
 
   const exportToCSV = () => {
-    if (!queryResult?.data) return;
+    console.log('Exporting CSV with queryResult:', queryResult);
+    if (!queryResult?.data || !queryResult?.columns) {
+      console.error('No data available for CSV export');
+      return;
+    }
     
     const dataToExport = selectedRows.length > 0 
       ? selectedRows.map(index => queryResult.data[index])
       : queryResult.data;
+    
+    console.log('Data to export:', dataToExport);
     
     const headers = queryResult.columns.join(',');
     const csvContent = [headers, ...dataToExport.map(row => 
@@ -196,7 +260,7 @@ export default function DataPreview({
           </button>
           
           <div style={{ color: '#6c757d', fontSize: '0.9rem' }}>
-            {queryResult && (
+            {queryResult && queryResult.data && (
               <>✅ {queryResult.total_rows} rows found in {queryResult.execution_time}</>
             )}
           </div>
@@ -211,6 +275,7 @@ export default function DataPreview({
 
       {queryResult && (
         <div className="card">
+          {console.log('Rendering query results section with:', queryResult)}
           <div style={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
@@ -220,7 +285,7 @@ export default function DataPreview({
             gap: '1rem'
           }}>
             <h3 style={{ color: '#2c3e50', margin: 0 }}>
-              📊 Query Results ({queryResult.data.length} rows)
+              📊 Query Results ({queryResult.data ? queryResult.data.length : 0} rows)
             </h3>
             
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -265,54 +330,68 @@ export default function DataPreview({
             )}
           </div>
 
-          {previewMode === 'table' && (
+          {previewMode === 'table' && queryResult.data && queryResult.columns && (
             <div style={{ overflowX: 'auto' }}>
-              <table className="results-table">
-                <thead>
-                  <tr>
-                    <th style={{ width: '40px' }}>
-                      <input
-                        type="checkbox"
-                        checked={selectAll}
-                        onChange={handleSelectAll}
-                      />
-                    </th>
-                    {queryResult.columns.map((col, i) => (
-                      <th key={i}>{col.replace(/_/g, ' ').toUpperCase()}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {queryResult.data.map((row, i) => (
-                    <tr 
-                      key={i}
-                      style={{
-                        backgroundColor: selectedRows.includes(i) ? '#e3f2fd' : 'transparent'
-                      }}
-                    >
-                      <td>
+              {queryResult.data.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '2rem',
+                  color: '#6c757d',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '1px solid #dee2e6'
+                }}>
+                  <h4>📋 No Results Found</h4>
+                  <p>Your query executed successfully but returned no data.</p>
+                </div>
+              ) : (
+                <table className="results-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '40px' }}>
                         <input
                           type="checkbox"
-                          checked={selectedRows.includes(i)}
-                          onChange={() => handleRowSelect(i)}
+                          checked={selectAll}
+                          onChange={handleSelectAll}
                         />
-                      </td>
-                      {queryResult.columns.map((col, j) => (
-                        <td key={j}>
-                          {col === 'salary_range' ? `💰 ${row[col]}` : 
-                           col === 'company' ? `🏢 ${row[col]}` :
-                           col === 'current_job' ? `💼 ${row[col]}` :
-                           row[col]}
-                        </td>
+                      </th>
+                      {queryResult.columns.map((col, i) => (
+                        <th key={i}>{col.replace(/_/g, ' ').toUpperCase()}</th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {queryResult.data.map((row, i) => (
+                      <tr 
+                        key={i}
+                        style={{
+                          backgroundColor: selectedRows.includes(i) ? '#e3f2fd' : 'transparent'
+                        }}
+                      >
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={selectedRows.includes(i)}
+                            onChange={() => handleRowSelect(i)}
+                          />
+                        </td>
+                        {queryResult.columns.map((col, j) => (
+                          <td key={j}>
+                            {col === 'salary_range' ? `💰 ${row[col]}` : 
+                             col === 'company' ? `🏢 ${row[col]}` :
+                             col === 'current_job' ? `💼 ${row[col]}` :
+                             row[col]}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           )}
 
-          {previewMode === 'json' && (
+          {previewMode === 'json' && queryResult.data && (
             <div style={{ 
               backgroundColor: '#f8f9fa', 
               padding: '1rem', 
